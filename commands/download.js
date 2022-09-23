@@ -65,7 +65,7 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
 const downloadVideo = (animeName, fileName, fileObj) => {
   try {
     createFolderIfNotExists(animeName);
-    const filepath = path.join(__dirname, `../${animeName}/${fileName}.${fileObj.type}`);
+    const filepath = path.join(__dirname, `../${animeName}/${fileName}-${fileObj.label}.${fileObj.type}`);
     const writer = fs.createWriteStream(filepath);
 
     const opts = { method: 'get', url: fileObj.file, responseType: 'stream' };
