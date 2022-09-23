@@ -52,7 +52,7 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
       const promise = downloadVideo(animeName, fileName, highestQualityVideoLinkObj);
       downloadPromises.push(promise);
 
-      if (downloadPromises.length === 5) {
+      if (downloadPromises.length === 6) {
         await Promise.all(downloadPromises);
         downloadPromises = [];
       }
