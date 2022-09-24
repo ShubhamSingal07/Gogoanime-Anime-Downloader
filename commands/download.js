@@ -31,6 +31,8 @@ const convertHtmlStringToDom = htmlString => {
 
 const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
   let downloadPromises = [];
+  const incConn = 6;
+  let conncurrentConn = incConn;
 
   for (let currEpisode = fromEpisode; currEpisode <= toEpisode; currEpisode++) {
     try {
@@ -49,12 +51,23 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
       videoLinks.sort((a, b) => parseInt(b.label) - parseInt(a.label));
       const highestQualityVideoLinkObj = videoLinks[0];
 
-      const promise = downloadVideo(animeName, fileName, highestQualityVideoLinkObj);
+      const promise = MakeQuerablePromise(
+        downloadVideo(animeName, fileName, highestQualityVideoLinkObj),
+      );
       downloadPromises.push(promise);
 
-      if (downloadPromises.length === 6) {
-        await Promise.all(downloadPromises);
-        downloadPromises = [];
+      console.log(downloadPromises.length, conncurrentConn);
+
+      if (downloadPromises.length === conncurrentConn) {
+        await Promise.any(downloadPromises);
+        downloadPromises = downloadPromises.filter(dp => dp.isPending());
+
+        if (conncurrentConn < 20) {
+          conncurrentConn += incConn - 2;
+          conncurrentConn = Math.max(conncurrentConn, 20);
+        }
+
+        continue;
       }
     } catch (err) {
       throw err;
@@ -65,7 +78,10 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
 const downloadVideo = (animeName, fileName, fileObj) => {
   try {
     createFolderIfNotExists(animeName);
-    const filepath = path.join(__dirname, `../${animeName}/${fileName}-${fileObj.label}.${fileObj.type}`);
+    const filepath = path.join(
+      __dirname,
+      `../${animeName}/${fileName}-${fileObj.label}.${fileObj.type}`,
+    );
     const writer = fs.createWriteStream(filepath);
 
     const opts = { method: 'get', url: fileObj.file, responseType: 'stream' };
@@ -100,3 +116,38 @@ const createFolderIfNotExists = folderName => {
     fs.mkdirSync(dir, { recursive: true });
   }
 };
+
+function MakeQuerablePromise(promise) {
+  // Don't modify any promise that has been already modified.
+  if (promise.isFulfilled) return promise;
+
+  // Set initial state
+  var isPending = true;
+  var isRejected = false;
+  var isFulfilled = false;
+
+  // Observe the promise, saving the fulfillment in a closure scope.
+  var result = promise.then(
+    function (v) {
+      isFulfilled = true;
+      isPending = false;
+      return v;
+    },
+    function (e) {
+      isRejected = true;
+      isPending = false;
+      throw e;
+    },
+  );
+
+  result.isFulfilled = function () {
+    return isFulfilled;
+  };
+  result.isPending = function () {
+    return isPending;
+  };
+  result.isRejected = function () {
+    return isRejected;
+  };
+  return result;
+}
