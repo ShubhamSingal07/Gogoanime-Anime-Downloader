@@ -31,8 +31,7 @@ const convertHtmlStringToDom = htmlString => {
 
 const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
   let downloadPromises = [];
-  const incConn = 5;
-  let conncurrentConn = incConn;
+  const conncurrentConn = 5;
 
   for (let currEpisode = fromEpisode; currEpisode <= toEpisode; currEpisode++) {
     try {
@@ -56,20 +55,20 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
       );
       downloadPromises.push(promise);
 
-      if (downloadPromises.length === conncurrentConn) {
+      if (downloadPromises.length >= conncurrentConn) {
         await Promise.any(downloadPromises);
-        downloadPromises = downloadPromises.filter(dp => dp.isPending());
-
-        if (conncurrentConn < 10) {
-          conncurrentConn += incConn - 2;
-          conncurrentConn = Math.min(conncurrentConn, 10);
-        }
-
+        downloadPromises = downloadPromises.filter(dp => !dp.isFulfilled());
         continue;
       }
     } catch (err) {
       throw err;
     }
+  }
+
+  try {
+    await Promise.all(downloadPromises);
+  } catch (err) {
+    throw err;
   }
 };
 
