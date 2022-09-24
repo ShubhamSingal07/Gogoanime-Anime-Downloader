@@ -34,9 +34,8 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
   const conncurrentConn = 5;
 
   for (let currEpisode = fromEpisode; currEpisode <= toEpisode; currEpisode++) {
+    const fileName = `episode-${currEpisode}`;
     try {
-      const fileName = `episode-${currEpisode}`;
-
       const res = await axios.get(`${GOGOANIME_HOST}/${animeName}-${fileName}`);
       const $ = convertHtmlStringToDom(res.data);
 
@@ -66,7 +65,7 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
         continue;
       }
     } catch (err) {
-      throw err;
+      console.log(`Error:${err.message} encountered while downloading ${fileName}`);
     }
   }
 
