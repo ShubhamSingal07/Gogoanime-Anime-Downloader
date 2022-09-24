@@ -31,7 +31,7 @@ const convertHtmlStringToDom = htmlString => {
 
 const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
   let downloadPromises = [];
-  const incConn = 6;
+  const incConn = 5;
   let conncurrentConn = incConn;
 
   for (let currEpisode = fromEpisode; currEpisode <= toEpisode; currEpisode++) {
@@ -56,15 +56,13 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
       );
       downloadPromises.push(promise);
 
-      console.log(downloadPromises.length, conncurrentConn);
-
       if (downloadPromises.length === conncurrentConn) {
         await Promise.any(downloadPromises);
         downloadPromises = downloadPromises.filter(dp => dp.isPending());
 
-        if (conncurrentConn < 20) {
+        if (conncurrentConn < 10) {
           conncurrentConn += incConn - 2;
-          conncurrentConn = Math.max(conncurrentConn, 20);
+          conncurrentConn = Math.min(conncurrentConn, 10);
         }
 
         continue;
