@@ -47,6 +47,11 @@ const downloadAnime = async (animeName, fromEpisode, toEpisode) => {
 
       const videoLinks = xstreamRes.data.data;
 
+      if (!Array.isArray(videoLinks)) {
+        console.log(`Skipped ${fileName} - not found`);
+        continue;
+      }
+
       videoLinks.sort((a, b) => parseInt(b.label) - parseInt(a.label));
       const highestQualityVideoLinkObj = videoLinks[0];
 
